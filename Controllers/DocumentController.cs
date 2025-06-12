@@ -2,8 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using testbills.Services;
 
-[Route("api/v{version:apiVersion}/[controller]")]
-[ApiVersion("1.0")]
+[Route("api/[controller]")]
 public class DocumentController : ControllerBase
 {
     private readonly DocumentIntelligenceService _documentService;

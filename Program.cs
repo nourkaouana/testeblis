@@ -1,5 +1,4 @@
-﻿
-using JwtRoleAuthentication.Service;
+﻿using JwtRoleAuthentication.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -41,8 +40,6 @@ namespace testbills
             {
                 // Spécification de la version et du titre de l'API
                 option.SwaggerDoc("v1", new OpenApiInfo { Title = "Test API", Version = "v1" });
-                option.SwaggerDoc("v2", new OpenApiInfo { Title = "Test API2", Version = "v2" });
-
 
                 // Configuration de l'authentification dans Swagger
                 option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -77,9 +74,6 @@ namespace testbills
 
             // Configuration des problèmes de détails
             builder.Services.AddProblemDetails();
-
-            // Configuration de la version de l'API
-            builder.Services.AddApiVersioning();
 
             // Configuration du routage en minuscules
             builder.Services.AddRouting(options => options.LowercaseUrls = true);

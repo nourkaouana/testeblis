@@ -97,36 +97,57 @@ namespace testbills.Services
                 }
             }
 
-            // Save to database
-            var invoice = new InvoiceData
+            try
             {
-                Libelle = output.TryGetValue("Description", out var libelle) ? libelle : null,
-                Date = output.TryGetValue("InvoiceDate", out var invoiceDate) ? invoiceDate : null,
-                Montant_HT = output.TryGetValue("SubTotal", out var ht) ? ht : null,
-                Montant_TTC = output.TryGetValue("Total", out var ttc) ? ttc : null,
-                TVA = output.FirstOrDefault(x => x.Key.StartsWith("TaxAmount_")).Value
-            };
-
-            int j = 1;
-            while (true)
-            {
-                bool hasTaxAmount = output.TryGetValue($"TaxAmount_{j}", out var taxAmount);
-                bool hasTaxRate = output.TryGetValue($"TaxRate_{j}", out var taxRate);
-
-                if (!hasTaxAmount && !hasTaxRate)
-                    break;
-
-                invoice.TaxDetails.Add(new TaxDetail
+                // Create invoice data
+                var invoice = new InvoiceData
                 {
-                    TaxAmount = hasTaxAmount ? taxAmount : null,
-                    TaxRate = hasTaxRate ? taxRate : null
-                });
+                    Libelle = output.TryGetValue("Description", out var libelle) ? libelle : null,
+                    Date = output.TryGetValue("InvoiceDate", out var invoiceDate) ? invoiceDate : null,
+                    Montant_HT = output.TryGetValue("SubTotal", out var ht) ? ht : null,
+                    Montant_TTC = output.TryGetValue("Total", out var ttc) ? ttc : null,
+                    TVA = output.FirstOrDefault(x => x.Key.StartsWith("TaxAmount_")).Value
+                };
 
-                j++;
+                // Add tax details
+                int j = 1;
+                while (true)
+                {
+                    bool hasTaxAmount = output.TryGetValue($"TaxAmount_{j}", out var taxAmount);
+                    bool hasTaxRate = output.TryGetValue($"TaxRate_{j}", out var taxRate);
+
+                    if (!hasTaxAmount && !hasTaxRate)
+                        break;
+
+                    invoice.TaxDetails.Add(new TaxDetail
+                    {
+                        TaxAmount = hasTaxAmount ? taxAmount : null,
+                        TaxRate = hasTaxRate ? taxRate : null
+                    });
+
+                    j++;
+                }
+
+                // Use a transaction for database operations
+                using var transaction = await _db.Database.BeginTransactionAsync();
+                try
+                {
+                    _db.Invoices.Add(invoice);
+                    await _db.SaveChangesAsync();
+                    await transaction.CommitAsync();
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
             }
-
-            _db.Invoices.Add(invoice);
-            await _db.SaveChangesAsync();
+            catch (Exception ex)
+            {
+                // Log the error but don't throw it to the client
+                // You might want to add proper logging here
+                Console.WriteLine($"Error saving invoice data: {ex.Message}");
+            }
 
             return output;
         }

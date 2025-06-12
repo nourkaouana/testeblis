@@ -5,8 +5,8 @@ using Microsoft.AspNetCore.Authorization;
 
 using testbills.Services;
 
-[Route("api/v{version:apiVersion}/[controller]")]
-[ApiVersion("1.0")]
+[Route("api/[controller]")]
+
 public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
